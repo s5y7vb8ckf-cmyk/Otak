@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a1d36">
+<title>لوحة الطالب - نادي اوتك</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{
+  --navy:#0a1d36; --navy-2:#122b4d; --navy-3:#1b3a63;
+  --gold:#b8924a; --gold-2:#d9b872; --gold-soft:#f5eddc;
+  --bg:#f2f4f8; --card:#fff; --ink:#142238; --muted:#6a788b; --line:#e2e7ee;
+  --ok:#1e7f5c; --ok-bg:#e4f4ec; --bad:#b4373f; --bad-bg:#fbe9ea; --warn:#8a6414; --warn-bg:#fbf1d8;
+  --sw:268px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.6}
+button{cursor:pointer;border:0;background:none;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+input,textarea,select{font-size:16px}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:0 0 20px}
+
+/* ===== الشريط الجانبي ===== */
+.sidebar{position:fixed;top:0;right:0;bottom:0;width:var(--sw);background:var(--navy);color:#cbd6e4;display:flex;flex-direction:column;padding:26px 16px 20px;z-index:50;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 22px;border-bottom:1px solid rgba(255,255,255,.09)}
+.brand-mark{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,var(--gold-2),var(--gold));color:var(--navy);font-family:'Amiri',serif;font-size:27px;line-height:1}
+.brand h2{font-size:17px;color:#fff;font-weight:800;line-height:1.2}
+.brand p{font-size:11.5px;color:var(--gold-2)}
+.nav-label{font-size:11.5px;color:#7f93ab;margin:22px 10px 8px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:10px;color:#c3cfdf;font-size:14.5px;font-weight:600;text-decoration:none;position:relative;transition:background .2s,color .2s;text-align:right}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:rgba(217,184,114,.14);color:#fff}
+.nav-item.active::before{content:"";position:absolute;right:-16px;top:9px;bottom:9px;width:4px;border-radius:4px 0 0 4px;background:var(--gold-2)}
+.nav-item.active .i{color:var(--gold-2)}
+.side-foot{margin-top:auto;padding-top:18px;display:grid;gap:8px}
+.league-btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--navy);font-weight:800;font-size:14px;text-decoration:none}
+.logout-btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.14);color:#f0c1c5;font-weight:700;font-size:13.5px}
+.logout-btn:hover{background:rgba(180,55,63,.18)}
+
+/* ===== المحتوى ===== */
+.main{margin-right:var(--sw);padding:26px clamp(18px,3vw,44px) 50px}
+.main>*{max-width:1180px;margin-inline:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.topbar h1{font-size:21px;font-weight:800;color:var(--navy)}
+.topbar small{display:block;font-size:12.5px;color:var(--muted);font-weight:500}
+.top-logout{display:none;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--bad);place-items:center}
+
+/* ===== التنبيه ===== */
+.notice{display:none;align-items:flex-start;gap:13px;padding:15px 18px;margin-bottom:18px;background:var(--warn-bg);border:1px solid #ecd9a2;border-radius:12px;color:var(--warn)}
+.notice.active{display:flex}
+.notice .i{margin-top:3px;color:var(--gold)}
+.notice h4{font-size:14px;font-weight:800;margin-bottom:1px}
+.notice p{font-size:13.5px;line-height:1.8;word-break:break-word}
+
+.view{display:none}
+.view.active-view{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ===== الواجهة الرئيسية (Hero) ===== */
+.hero{position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;padding:36px 40px;border-radius:18px;color:#fff;margin-bottom:18px;background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,var(--navy-3) 100%);border:1px solid rgba(217,184,114,.35)}
+.hero::after{content:"";position:absolute;left:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(217,184,114,.22);box-shadow:0 0 0 38px rgba(217,184,114,.04),0 0 0 76px rgba(217,184,114,.03);pointer-events:none}
+.hero>*{position:relative;z-index:1}
+.hero .tag{display:inline-block;font-size:12.5px;color:var(--gold-2);border:1px solid rgba(217,184,114,.4);padding:3px 13px;border-radius:30px;margin-bottom:14px}
+.hero h2{font-family:'Amiri',serif;font-size:clamp(30px,3.4vw,44px);line-height:1.35;font-weight:700}
+.hero p{color:#b9c8da;font-size:14.5px;margin-top:6px;max-width:44ch}
+.points{min-width:190px;text-align:center;padding:20px 26px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(217,184,114,.5)}
+.points small{display:block;font-size:12.5px;color:var(--gold-2);font-weight:600}
+.points strong{display:block;font-family:'Amiri',serif;font-size:54px;line-height:1.15;color:#fff}
+.points span{font-size:12px;color:#9fb2c9}
+
+.grid{display:grid;grid-template-columns:300px 1fr;gap:18px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px}
+.card-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.ring-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring{position:relative;width:150px;height:150px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) 0deg,#e9edf3 0deg);margin:12px 0 14px}
+.ring::before{content:"";position:absolute;inset:13px;background:#fff;border-radius:50%}
+.ring b{position:relative;font-family:'Amiri',serif;font-size:32px;color:var(--navy)}
+#commitmentText{font-size:13.5px;font-weight:600;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{padding:18px 10px;text-align:center;border-radius:12px;background:#f7f9fc;border:1px solid var(--line);border-top:3px solid var(--navy-3)}
+.stat:nth-child(1){border-top-color:var(--ok)}.stat:nth-child(2){border-top-color:var(--bad)}.stat:nth-child(3){border-top-color:var(--gold)}.stat:nth-child(4){border-top-color:#6b4fa3}
+.stat h3{font-family:'Amiri',serif;font-size:34px;line-height:1.2;color:var(--navy)}
+.stat p{font-size:13px;color:var(--muted);font-weight:600}
+
+/* ===== الجداول ===== */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;text-align:right;min-width:420px}
+th{background:#f4f6fa;color:#4b5b70;font-size:12.5px;font-weight:700;padding:13px 18px;white-space:nowrap}
+td{padding:13px 18px;border-top:1px solid var(--line);font-size:14px}
+tbody tr:hover td{background:#fafbfd}
+td.empty{text-align:center;color:var(--muted);padding:28px}
+.badge{display:inline-block;min-width:76px;text-align:center;padding:4px 13px;border-radius:30px;font-size:12.5px;font-weight:700}
+.b-present{background:var(--ok-bg);color:var(--ok)}.b-absent{background:var(--bad-bg);color:var(--bad)}
+.b-late{background:var(--warn-bg);color:var(--warn)}.b-excuse{background:#e5eefa;color:#245a9e}
+.b-recite{background:#efe8fa;color:#5b3f94}.b-points{background:var(--gold-soft);color:#7d5f22}
+.pos{color:var(--ok);font-weight:800}.neg{color:var(--bad);font-weight:800}
+
+/* ===== بطاقة النقاط ===== */
+.scan{max-width:640px;margin-inline:auto}
+#rewardReader{width:100%;min-height:240px;border-radius:12px;overflow:hidden;background:#f4f6fa;border:1px dashed #c5cfdc}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{min-height:46px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;transition:filter .2s}
+.btn:hover{filter:brightness(1.07)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.manual{display:flex;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.field{width:100%;min-height:48px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:#f9fbfd;outline:none}
+.field:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(184,146,74,.16)}
+.result{display:none;margin-top:16px;padding:14px 16px;border-radius:10px;font-weight:700;font-size:14px;line-height:1.8}
+.result.show{display:block}
+.result.success{background:var(--ok-bg);color:var(--ok)}.result.error{background:var(--bad-bg);color:var(--bad)}.result.info{background:#e5eefa;color:#245a9e}
+
+/* ===== الإعدادات ===== */
+.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px}
+.info{padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:#f9fbfd}
+.info small{display:block;font-size:12px;color:var(--muted)}
+.info b{font-size:15.5px;color:var(--navy)}
+.pass-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pass-form label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+.pass-form .btn{grid-column:1/-1;justify-self:start;min-width:180px}
+#settingsAlert{display:none;margin-top:14px;padding:11px;border-radius:10px;text-align:center;font-weight:700;font-size:13.5px}
+.danger{width:100%;margin-top:22px;padding:13px;border-radius:10px;background:var(--bad-bg);color:var(--bad);font-weight:700;border:1px solid #f0c9cc}
+.foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.foot em{font-style:normal;background:var(--gold-soft);color:#7d5f22;padding:1px 10px;border-radius:20px;font-weight:700;margin-right:8px}
+
+/* ===== المساعد ===== */
+.ai{padding:0;overflow:hidden;max-width:900px;margin-inline:auto}
+.ai-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--navy);color:#fff}
+.ai-head .logo{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,var(--gold-2),var(--gold));color:var(--navy)}
+.ai-head h3{font-size:16px}.ai-head p{font-size:12px;color:#aebfd4}
+.ai-head .clear{margin-right:auto;width:38px;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.2);display:grid;place-items:center;color:#d7e1ee}
+#aiMessages{height:min(56vh,520px);min-height:320px;overflow-y:auto;padding:20px;background:#f7f9fc}
+.msg{display:flex;margin-bottom:12px}.msg.user{justify-content:flex-start}.msg.bot{justify-content:flex-end}
+.bubble{max-width:min(80%,640px);padding:11px 15px;border-radius:14px;font-size:14px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
+.msg.bot .bubble{background:#fff;border:1px solid var(--line);border-top-right-radius:4px}
+.msg.user .bubble{background:var(--navy);color:#fff;border-top-left-radius:4px}
+.bubble img{display:block;max-width:220px;max-height:220px;border-radius:10px;margin-top:8px;object-fit:cover}
+.typing{display:inline-flex;gap:5px}.typing i{width:6px;height:6px;border-radius:50%;background:#8fa0b4;animation:dot 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,80%,100%{opacity:.4;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+#aiImagePreviewWrap{display:none;align-items:center;gap:10px;margin:10px 14px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#f9fbfd}
+#aiImagePreviewWrap img{width:52px;height:52px;border-radius:8px;object-fit:cover}
+#aiImagePreviewWrap strong{font-size:12.5px;display:block}#aiImageSize{font-size:11.5px;color:var(--muted)}
+#aiImagePreviewWrap .x{margin-right:auto;width:30px;height:30px;border-radius:50%;background:var(--bad-bg);color:var(--bad);font-size:20px;line-height:1}
+.compose{display:flex;align-items:flex-end;gap:9px;padding:12px 14px;border-top:1px solid var(--line);background:#fff;margin-top:10px}
+.compose textarea{flex:1;resize:none;min-height:46px;max-height:130px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#f9fbfd;outline:none}
+.compose textarea:focus{border-color:var(--gold)}
+.sq{width:46px;height:46px;border-radius:10px;display:grid;place-items:center;flex:0 0 46px}
+.sq.send{background:var(--navy);color:#fff}.sq.attach{border:1px solid var(--line);color:var(--navy-3)}.sq:disabled{opacity:.5}
+
+/* ===== الجوال ===== */
+.bottom-nav{display:none}
+.sheet-bg{display:none;position:fixed;inset:0;background:rgba(10,29,54,.5);z-index:1100}
+.sheet-bg.open{display:block}
+.sheet{position:fixed;right:0;left:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .25s ease;z-index:1101}
+.sheet-bg.open .sheet{transform:none}
+.sheet .grab{width:42px;height:4px;border-radius:4px;background:#d3dae4;margin:0 auto 14px}
+.sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sheet-grid a,.sheet-grid button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:15px 6px;border-radius:12px;background:#f4f6fa;color:var(--navy);font-size:12.5px;font-weight:700;text-decoration:none}
+.sheet-grid .i{width:23px;height:23px}
+.sheet-grid .out{color:var(--bad);background:var(--bad-bg)}
+
+@media(max-width:1100px){.grid{grid-template-columns:1fr}.hero{padding:30px}}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-right:0;padding:14px 12px calc(98px + env(safe-area-inset-bottom))}
+  .topbar{margin-bottom:14px}.topbar h1{font-size:18px}
+  .top-logout{display:grid}
+  .hero{grid-template-columns:1fr;text-align:center;padding:26px 18px;gap:18px}
+  .hero p{margin-inline:auto}
+  .points{min-width:0;padding:14px}.points strong{font-size:44px}
+  .card{padding:18px 14px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .info-grid,.pass-form{grid-template-columns:1fr}
+  .pass-form .btn{justify-self:stretch}
+  .manual{flex-direction:column}.btn{width:100%}
+  th,td{padding:11px 12px;font-size:13px}
+  #aiMessages{height:calc(100vh - 380px);min-height:280px;padding:14px 10px}
+  .bubble{max-width:90%}
+  .bottom-nav{display:flex;position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;padding:6px;box-shadow:0 12px 34px rgba(10,29,54,.2);z-index:1000}
+  .bn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border-radius:12px;color:#5d6d82;font-size:11px;font-weight:700}
+  .bn.active{background:var(--navy);color:#fff}
+  .bn.active .i{color:var(--gold-2)}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- أيقونات -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5M9.5 21v-6h5v6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16m-11 5 2 2 4-4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 2v4M16 2v4M8 10h8M8 14h5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 5v4M4 5h4M20 5v4M20 5h-4M4 19v-4M4 19h4M20 19v-4M20 19h-4"/><path d="M8 9v6M11 9v6M14 9v6M17 9v6"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3a5 5 0 0 0-5 5v1a4 4 0 0 0-2 3.5A4.5 4.5 0 0 0 9.5 17H11"/><path d="M12 3a5 5 0 0 1 5 5v1a4 4 0 0 1 2 3.5A4.5 4.5 0 0 1 14.5 17H13"/><path d="M12 7v13M8.5 11H12M12 14.5h3.5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 14.5l2 1.5-2 3-2.3-1a8 8 0 0 1-2.2 1.2L14 22h-4l-.5-2.8A8 8 0 0 1 7.3 18L5 19l-2-3 2-1.5a8 8 0 0 1 0-5L3 8l2-3 2.3 1a8 8 0 0 1 2.2-1.2L10 2h4l.5 2.8A8 8 0 0 1 16.7 6L19 5l2 3-2 1.5a8 8 0 0 1 0 5z"/></symbol>
+  <symbol id="i-cup" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v3a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a4 4 0 0 0 4 4M17 6h3v1a4 4 0 0 1-4 4"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M10 5H6.8A2.8 2.8 0 0 0 4 7.8v8.4A2.8 2.8 0 0 0 6.8 19H10"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m4 12 16-8-6 16-2-6z"/><path d="m12 14 8-10"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5 12.5 20a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.4-8.4"/></symbol>
+</svg>
+
+<!-- الشريط الجانبي -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">أ</div>
+    <div><h2>نادي اوتك</h2><p>لوحة الطالب الرسمية</p></div>
+  </div>
+  <nav>
+    <div class="nav-label">حسابي</div>
+    <button class="nav-item active" data-view="home"><svg class="i"><use href="#i-home"/></svg>الرئيسية</button>
+    <button class="nav-item" data-view="attendance"><svg class="i"><use href="#i-cal"/></svg>سجل الحضور والغياب</button>
+    <button class="nav-item" data-view="statement"><svg class="i"><use href="#i-doc"/></svg>كشف الحساب</button>
+    <button class="nav-item" data-view="rewardscan"><svg class="i"><use href="#i-scan"/></svg>مسح بطاقة نقاط</button>
+    <div class="nav-label">المحتوى</div>
+    <a class="nav-item" href="kddk.html"><svg class="i"><use href="#i-task"/></svg>التكاليف</a>
+    <a class="nav-item" href="videos.html"><svg class="i"><use href="#i-play"/></svg>المقاطع</a>
+    <button class="nav-item" data-view="ai"><svg class="i"><use href="#i-ai"/></svg>المساعد الذكي</button>
+    <button class="nav-item" data-view="settings"><svg class="i"><use href="#i-gear"/></svg>الإعدادات</button>
+  </nav>
+  <div class="side-foot">
+    <a class="league-btn" href="mxbmn.html"><svg class="i"><use href="#i-cup"/></svg>الدوري</a>
+    <button class="logout-btn" onclick="logout()"><svg class="i"><use href="#i-out"/></svg>تسجيل الخروج</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><h1 id="pageTitle">الرئيسية</h1><small id="todayText"></small></div>
+    <button class="top-logout" onclick="logout()" aria-label="تسجيل الخروج"><svg class="i"><use href="#i-out"/></svg></button>
+  </div>
+
+  <div class="notice" id="warningBanner" role="alert">
+    <svg class="i"><use href="#i-bell"/></svg>
+    <div><h4>تنبيه من الإدارة</h4><p id="warningBannerText"></p></div>
+  </div>
+
+  <!-- الرئيسية -->
+  <section id="home-view" class="view active-view">
+    <div class="hero">
+      <div>
+        <span class="tag">المجموعة: <span id="studentGroup">—</span></span>
+        <h2>حيّاك الله، <span id="studentName">—</span></h2>
+        <p>التزامك اليوم يصنع إنجازك غداً. تابع حضورك ونقاطك من مكان واحد.</p>
+      </div>
+      <div class="points"><small>رصيد النقاط</small><strong id="statTotalPoints">0</strong><span id="studentCodeLine"></span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card ring-card">
+        <h3 class="card-title">نسبة الالتزام</h3>
+        <div class="ring" id="circularProgress"><b id="progressVal">0%</b></div>
+        <p id="commitmentText"></p>
+      </div>
+      <div class="card">
+        <h3 class="card-title">ملخص النشاط</h3>
+        <p class="card-sub">عدد العمليات المسجلة لك حسب النوع</p>
+        <div class="stats">
+          <div class="stat"><h3 id="statAttendance">0</h3><p>حضور</p></div>
+          <div class="stat"><h3 id="statAbsence">0</h3><p>غياب</p></div>
+          <div class="stat"><h3 id="statLate">0</h3><p>تأخر</p></div>
+          <div class="stat"><h3 id="statRecitation">0</h3><p>تسميع</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">آخر العمليات</h3>
+      <p class="card-sub">أحدث خمس عمليات في حسابك</p>
+      <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>العملية</th><th>النقاط</th></tr></thead>
+      <tbody id="operationsTableBody"><tr><td colspan="3" class="empty">جاري تحميل البيانات...</td></tr></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- الحضور -->
+  <section id="attendance-view" class="view">
+    <div class="card">
+      <h3 class="card-title">سجل الحضور والانضباط</h3>
+      <p class="card-sub">الحضور والغياب والتأخر والغياب بعذر</p>
+      <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>الحالة</th><th>النقاط</th></tr></thead>
+      <tbody id="attendanceTableBody"><tr><td colspan="3" class="empty">جاري تحميل السجلات...</td></tr></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- كشف الحساب -->
+  <section id="statement-view" class="view">
+    <div class="card">
+      <h3 class="card-title">كشف الحساب</h3>
+      <p class="card-sub">جميع العمليات والنقاط المسجلة في حسابك</p>
+      <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>العملية</th><th>النقاط</th></tr></thead>
+      <tbody id="fullOperationsTableBody"><tr><td colspan="3" class="empty">جاري تحميل كشف الحساب...</td></tr></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- مسح البطاقة -->
+  <section id="rewardscan-view" class="view">
+    <div class="card scan">
+      <h3 class="card-title">مسح بطاقة نقاط</h3>
+      <p class="card-sub">وجّه الكاميرا إلى رمز QR. تُضاف نقاط البطاقة لحسابك وتُقفل بعد أول استخدام.</p>
+      <div id="rewardReader"></div>
+      <div class="row">
+        <button type="button" class="btn btn-ghost" id="startRewardScanBtn">تشغيل الكاميرا</button>
+        <button type="button" class="btn btn-ghost" id="stopRewardScanBtn">إيقاف الكاميرا</button>
+      </div>
+      <div class="manual">
+        <input id="rewardManualCode" class="field" type="text" autocomplete="off" placeholder="أو اكتب كود البطاقة">
+        <button type="button" class="btn btn-primary" id="redeemManualBtn">استخدام البطاقة</button>
+      </div>
+      <div id="rewardScanResult" class="result" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- المساعد -->
+  <section id="ai-view" class="view">
+    <div class="card ai">
+      <div class="ai-head">
+        <div class="logo"><svg class="i"><use href="#i-ai"/></svg></div>
+        <div><h3>مساعد اوتك</h3><p>اسأل عن الدراسة أو التنظيم أو الأنشطة</p></div>
+        <button type="button" class="clear" onclick="clearAiChat()" aria-label="مسح المحادثة"><svg class="i"><use href="#i-trash"/></svg></button>
+      </div>
+      <div id="aiMessages" aria-live="polite"></div>
+      <div id="aiImagePreviewWrap">
+        <img id="aiImagePreview" alt="معاينة الصورة">
+        <div><strong>الصورة جاهزة للإرسال</strong><span id="aiImageSize"></span></div>
+        <button type="button" class="x" onclick="removeAiImage()" aria-label="حذف الصورة">×</button>
+      </div>
+      <form class="compose" onsubmit="sendAiMessage(event)">
+        <input id="aiImageInput" type="file" accept="image/*" hidden onchange="handleAiImage(event)">
+        <button class="sq attach" type="button" onclick="document.getElementById('aiImageInput').click()" aria-label="إرفاق صورة"><svg class="i"><use href="#i-clip"/></svg></button>
+        <textarea id="aiInput" rows="1" maxlength="2000" placeholder="اكتب رسالتك..." aria-label="رسالتك"></textarea>
+        <button id="aiSendBtn" class="sq send" type="submit" aria-label="إرسال"><svg class="i"><use href="#i-send"/></svg></button>
+      </form>
+    </div>
+  </section>
+
+  <!-- الإعدادات -->
+  <section id="settings-view" class="view">
+    <div class="card" style="max-width:860px;margin-inline:auto">
+      <h3 class="card-title">بيانات الحساب</h3>
+      <p class="card-sub">معلوماتك المسجلة في النادي</p>
+      <div class="info-grid">
+        <div class="info"><small>الاسم الكامل</small><b id="settingsName"></b></div>
+        <div class="info"><small>كود الطالب</small><b id="settingsCode"></b></div>
+        <div class="info"><small>المجموعة</small><b id="settingsGroup"></b></div>
+        <div class="info"><small>إجمالي النقاط</small><b id="settingsPoints"></b></div>
+      </div>
+
+      <h3 class="card-title" style="font-size:15px">تغيير كلمة السر</h3>
+      <p class="card-sub">أدخل كلمتك الحالية ثم الجديدة</p>
+      <form class="pass-form" id="changePasswordForm" onsubmit="updatePassword(event)">
+        <div><label for="currentPass">كلمة السر الحالية</label><input type="password" id="currentPass" class="field" autocomplete="current-password" required></div>
+        <div><label for="newPass">كلمة السر الجديدة</label><input type="password" id="newPass" class="field" autocomplete="new-password" required></div>
+        <button type="submit" id="saveBtn" class="btn btn-primary">حفظ كلمة السر</button>
+      </form>
+      <div id="settingsAlert"></div>
+
+      <button class="danger" onclick="logout()">تسجيل الخروج وحذف البيانات من هذا الجهاز</button>
+      <div class="foot">نادي اوتك &copy; 2026 <em>الإصدار 1.1.0</em></div>
+    </div>
+  </section>
+</main>
+
+<!-- شريط الجوال -->
+<nav class="bottom-nav" aria-label="التنقل">
+  <button class="bn active" data-view="home"><svg class="i"><use href="#i-home"/></svg>الرئيسية</button>
+  <button class="bn" data-view="attendance"><svg class="i"><use href="#i-cal"/></svg>الحضور</button>
+  <button class="bn" data-view="statement"><svg class="i"><use href="#i-doc"/></svg>الحساب</button>
+  <button class="bn" data-view="rewardscan"><svg class="i"><use href="#i-scan"/></svg>البطاقة</button>
+  <button class="bn" id="moreBtn" onclick="toggleMore(true)"><svg class="i"><use href="#i-more"/></svg>المزيد</button>
+</nav>
+<div class="sheet-bg" id="moreSheet" onclick="if(event.target===this)toggleMore(false)">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-grid">
+      <a href="kddk.html"><svg class="i"><use href="#i-task"/></svg>التكاليف</a>
+      <a href="videos.html"><svg class="i"><use href="#i-play"/></svg>المقاطع</a>
+      <a href="mxbmn.html"><svg class="i"><use href="#i-cup"/></svg>الدوري</a>
+      <button data-view="ai"><svg class="i"><use href="#i-ai"/></svg>المساعد</button>
+      <button data-view="settings"><svg class="i"><use href="#i-gear"/></svg>الإعدادات</button>
+      <button class="out" onclick="logout()"><svg class="i"><use href="#i-out"/></svg>خروج</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========= الإعدادات ========= */
+const webAppURL = 'https://script.google.com/macros/s/AKfycbzWWnPy5wgkjMc5L14FWCWvU5JtOol0s39eB-i_qnp-s9zjdTy2bvWSN52Ds8PpWjZy/exec';
+const rewardCardsWebAppURL = webAppURL;
+const operationsSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnq_ryhGDHxZYtbt5gqAXRIo2d0-IuXnD1ZsMlFX9u8AwpbRiLJdcHD5SbmnzXmMLBLr26qCupmGP8/pub?gid=1214163216&single=true&output=csv';
+const bannerSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7hDBuMhs4jzcpy1yiGfb4VAA5wKcoxuqPtysFbTamXODq_NhMgbI9HCDI9tCV3Yk5sDTQn10TBkZ6/pub?gid=0&single=true&output=csv';
+
+/* مفتاح المساعد: لا تضع مفتاحاً حقيقياً هنا، والأفضل أن يمر الطلب عبر خادم وسيط */
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_MODEL = 'z-ai/glm-5.3-flash';
+const OPENROUTER_API_KEY = '';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ========= الجلسة ========= */
+const student = JSON.parse(localStorage.getItem('studentData') || 'null');
+if (!student) {
+  window.location.href = 'index.html';
+} else {
+  $('studentName').textContent = student.name || '';
+  $('studentGroup').textContent = student.group || '—';
+  $('studentCodeLine').textContent = 'كود الطالب: ' + (student.code || '');
+  $('settingsName').textContent = student.name || '';
+  $('settingsCode').textContent = student.code || '';
+  $('settingsGroup').textContent = student.group || '';
+  setPoints(student.points || 0);
+  setupCommitment(parseFloat(student.commitment) || 0);
+  fetchOperations(student.code);
+}
+$('todayText').textContent = new Date().toLocaleDateString('ar-SA', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+function setPoints(v){ $('statTotalPoints').textContent = v; $('settingsPoints').textContent = v; }
+
+function setupCommitment(p){
+  $('progressVal').textContent = p + '%';
+  let color = '#b4373f', text = 'مستوى الالتزام منخفض';
+  if (p >= 80) { color = '#1e7f5c'; text = 'مستوى التزام ممتاز ومستقر'; }
+  else if (p >= 50) { color = '#b8924a'; text = 'مستوى التزام جيد، يحتاج حرصاً'; }
+  $('commitmentText').textContent = text;
+  $('circularProgress').style.background = `conic-gradient(${color} ${p * 3.6}deg, #e9edf3 0deg)`;
+}
+
+/* ========= التنقل ========= */
+const titles = {home:'الرئيسية', attendance:'سجل الحضور والغياب', statement:'كشف الحساب', rewardscan:'مسح بطاقة نقاط', ai:'المساعد الذكي', settings:'الإعدادات'};
+function switchView(name){
+  if (['home','attendance','statement'].includes(name) && student && !window.__operationsLoaded) fetchOperations(student.code);
+  if (name !== 'rewardscan') stopRewardScanner();
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active-view', v.id === name + '-view'));
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === name && !b.closest('.sheet')));
+  $('moreBtn').classList.toggle('active', name === 'ai' || name === 'settings');
+  $('pageTitle').textContent = titles[name] || '';
+  toggleMore(false);
+  window.scrollTo({top:0});
+}
+function toggleMore(open){ $('moreSheet').classList.toggle('open', open); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) switchView(b.dataset.view); });
+
+/* ========= التنبيه ========= */
+function parseCSV(str){
+  const out = []; let row = [], s = '', q = false;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i], n = str[i+1];
+    if (c === '"' && q && n === '"') { s += '"'; i++; }
+    else if (c === '"') q = !q;
+    else if (c === ',' && !q) { row.push(s); s = ''; }
+    else if ((c === '\n' || (c === '\r' && n === '\n')) && !q) { if (c === '\r') i++; row.push(s); out.push(row); row = []; s = ''; }
+    else s += c;
+  }
+  row.push(s); out.push(row);
+  return out;
+}
+function checkBanner(){
+  fetch(bannerSheetURL + '&t=' + Date.now()).then(r => r.text()).then(t => {
+    const rows = parseCSV(t);
+    const v = rows[1] && rows[1][1] ? rows[1][1].trim() : '';
+    if (v && v !== '-') { $('warningBannerText').textContent = v; $('warningBanner').classList.add('active'); }
+    else $('warningBanner').classList.remove('active');
+  }).catch(err => console.error('banner:', err));
+}
+checkBanner();
+setInterval(checkBanner, 30000);
+
+/* ========= العمليات ========= */
+async function fetchOperations(code){
+  const setMsg = m => ['operationsTableBody','attendanceTableBody','fullOperationsTableBody'].forEach(id => {
+    $(id).innerHTML = `<tr><td colspan="3" class="empty">${m}</td></tr>`;
+  });
+  try {
+    setMsg('جاري تحميل السجلات...');
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch(operationsSheetURL + '&_=' + Date.now(), {cache:'no-store', credentials:'omit', signal:ctrl.signal});
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    if (!text.trim()) throw new Error('ملف العمليات فارغ');
+
+    const rows = parseCSV(text);
+    const want = String(code ?? '').trim().replace(/^\uFEFF/, '');
+    const ops = [], att = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i] || [];
+      if (r.length < 4) continue;
+      if (String(r[0] ?? '').trim().replace(/^\uFEFF/, '') !== want) continue;
+      const op = {date:String(r[1] ?? '').trim(), operation:String(r[2] ?? '').trim(), points:String(r[3] ?? '').trim()};
+      ops.push(op);
+      if (['حضور','غياب','تأخر','غياب بعذر'].includes(op.operation)) att.push(op);
+    }
+    ops.reverse(); att.reverse();
+
+    const n = {};
+    ops.forEach(o => n[o.operation] = (n[o.operation] || 0) + 1);
+    $('statAttendance').textContent = n['حضور'] || 0;
+    $('statAbsence').textContent = n['غياب'] || 0;
+    $('statLate').textContent = n['تأخر'] || 0;
+    $('statRecitation').textContent = n['تسميع'] || 0;
+
+    window.studentAiStats = {
+      attendance:n['حضور'] || 0, absence:n['غياب'] || 0, late:n['تأخر'] || 0,
+      excusedAbsence:n['غياب بعذر'] || 0, recitation:n['تسميع'] || 0,
+      totalOperations:ops.length, attendanceRecords:att.length,
+      absenceRate: att.length ? +(((n['غياب'] || 0) / att.length) * 100).toFixed(1) : 0,
+      operations: ops.slice(0, 60)
+    };
+    populateTable('operationsTableBody', ops.slice(0, 5));
+    populateTable('attendanceTableBody', att);
+    populateTable('fullOperationsTableBody', ops);
+    window.__operationsLoaded = true;
+  } catch (err) {
+    console.error('خطأ في جلب السجلات:', err);
+    window.__operationsLoaded = false;
+    setMsg(err && err.name === 'AbortError'
+      ? 'تأخر الاتصال بجدول العمليات. افتح الصفحة مرة أخرى للمحاولة.'
+      : 'تعذر تحميل بيانات العمليات. افتح الصفحة مرة أخرى للمحاولة.');
+  }
+}
+
+const badgeMap = {'حضور':'b-present','غياب':'b-absent','تأخر':'b-late','غياب بعذر':'b-excuse','تسميع':'b-recite'};
+function populateTable(id, ops){
+  const tb = $(id);
+  if (!ops.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">لا توجد سجلات حتى الآن</td></tr>'; return; }
+  tb.innerHTML = ops.map(o => {
+    const p = parseFloat(o.points);
+    const cls = isNaN(p) ? '' : (p > 0 ? 'pos' : (p < 0 ? 'neg' : ''));
+    return `<tr><td>${esc(o.date)}</td><td><span class="badge ${badgeMap[o.operation] || 'b-points'}">${esc(o.operation)}</span></td><td class="${cls}">${esc(o.points)}</td></tr>`;
+  }).join('');
+}
+
+/* ========= بطاقات النقاط ========= */
+let rewardScanner = null, rewardScannerRunning = false, rewardRedeeming = false;
+
+function rewardJsonp(params){
+  return new Promise((resolve, reject) => {
+    const cb = '__reward_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    const q = new URLSearchParams({...params, callback:cb, _:Date.now()});
+    const clean = () => { clearTimeout(timer); delete window[cb]; script.remove(); };
+    const timer = setTimeout(() => { clean(); reject(new Error('انتهت مهلة الاتصال')); }, 15000);
+    window[cb] = d => { clean(); resolve(d); };
+    script.onerror = () => { clean(); reject(new Error('تعذر الاتصال بالخادم')); };
+    script.src = rewardCardsWebAppURL + '?' + q.toString();
+    document.body.appendChild(script);
+  });
+}
+const normalizeRewardCode = raw => { let c = String(raw || '').trim(); if (c.toUpperCase().startsWith('OTK:')) c = c.slice(4); return c.trim(); };
+function showRewardResult(msg, type='info'){ const b = $('rewardScanResult'); b.className = 'result show ' + type; b.textContent = msg; }
+
+async function redeemRewardCard(raw){
+  if (rewardRedeeming) return;
+  const cardCode = normalizeRewardCode(raw);
+  const sd = JSON.parse(localStorage.getItem('studentData') || 'null');
+  if (!sd || !sd.code) return showRewardResult('انتهت جلسة الطالب. سجّل الدخول مرة أخرى.', 'error');
+  if (!cardCode) return showRewardResult('أدخل أو امسح كود بطاقة صحيح.', 'error');
+
+  rewardRedeeming = true;
+  showRewardResult('جاري التحقق من البطاقة وإضافة النقاط...', 'info');
+  try {
+    const r = await rewardJsonp({action:'redeemCard', cardCode, studentCode:sd.code});
+    if (!r || !r.ok) {
+      showRewardResult((r && r.message) || 'تعذر استخدام البطاقة.', 'error');
+      setTimeout(async () => {
+        if (rewardScanner && rewardScannerRunning) { try { await rewardScanner.resume(); } catch (_) {} }
+        else startRewardScanner();
+      }, 1400);
+      return;
+    }
+    const pts = Number(r.points || 0);
+    sd.points = Number(sd.points || 0) + pts;
+    localStorage.setItem('studentData', JSON.stringify(sd));
+    setPoints(sd.points);
+    showRewardResult(`تمت إضافة ${pts} نقطة — ${r.item || 'بطاقة نقاط'}. أُغلقت البطاقة ولا يمكن استخدامها مرة أخرى.`, 'success');
+    $('rewardManualCode').value = '';
+    fetchOperations(sd.code);
+    stopRewardScanner();
+  } catch (err) {
+    console.error(err);
+    showRewardResult(err.message || 'حدث خطأ أثناء استخدام البطاقة.', 'error');
+  } finally { rewardRedeeming = false; }
+}
+
+async function startRewardScanner(){
+  if (rewardScannerRunning) return;
+  if (typeof Html5Qrcode === 'undefined') return showRewardResult('تعذر تحميل قارئ QR. تحقق من اتصال الإنترنت.', 'error');
+  try {
+    rewardScanner = rewardScanner || new Html5Qrcode('rewardReader');
+    await rewardScanner.start({facingMode:'environment'},
+      {fps:12, qrbox:{width:250, height:250}, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE]},
+      async text => {
+        if (rewardRedeeming) return;
+        try { await rewardScanner.pause(true); } catch (_) {}
+        redeemRewardCard(text);
+      }, () => {});
+    rewardScannerRunning = true;
+    showRewardResult('الكاميرا تعمل. وجّهها إلى رمز QR.', 'info');
+  } catch (err) {
+    console.error(err);
+    showRewardResult('تعذر تشغيل الكاميرا. تأكد من السماح للموقع باستخدامها وفتحه عبر HTTPS.', 'error');
+  }
+}
+async function stopRewardScanner(){
+  if (!rewardScanner || !rewardScannerRunning) return;
+  try { await rewardScanner.stop(); } catch (_) {}
+  rewardScannerRunning = false;
+}
+$('startRewardScanBtn').addEventListener('click', startRewardScanner);
+$('stopRewardScanBtn').addEventListener('click', stopRewardScanner);
+$('redeemManualBtn').addEventListener('click', () => redeemRewardCard($('rewardManualCode').value));
+$('rewardManualCode').addEventListener('keydown', e => { if (e.key === 'Enter') redeemRewardCard(e.target.value); });
+
+/* ========= كلمة السر والخروج ========= */
+async function updatePassword(e){
+  e.preventDefault();
+  const cur = $('currentPass').value.trim(), nw = $('newPass').value.trim();
+  const box = $('settingsAlert'), btn = $('saveBtn');
+  const sd = JSON.parse(localStorage.getItem('studentData') || 'null');
+  const show = (msg, bg, fg) => { box.style.display = 'block'; box.style.background = bg; box.style.color = fg; box.textContent = msg; };
+  if (!sd || !sd.code) { window.location.href = 'index.html'; return; }
+  if (cur !== sd.password) return show('كلمة السر الحالية غير صحيحة.', '#fbe9ea', '#b4373f');
+
+  show('جاري تحديث كلمة السر...', '#e5eefa', '#245a9e');
+  btn.disabled = true;
+  try {
+    await fetch(webAppURL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:sd.code, newPassword:nw})});
+    sd.password = nw;
+    localStorage.setItem('studentData', JSON.stringify(sd));
+    show('تم تغيير كلمة السر بنجاح.', '#e4f4ec', '#1e7f5c');
+    $('changePasswordForm').reset();
+  } catch (err) {
+    console.error(err);
+    show('تعذر التحديث، حاول مرة أخرى لاحقاً.', '#fbe9ea', '#b4373f');
+  }
+  btn.disabled = false;
+}
+function logout(){ localStorage.removeItem('studentData'); window.location.href = 'index.html'; }
+
+/* ========= المساعد الذكي ========= */
+let aiHistory = [], aiPendingImage = null;
+const WELCOME = 'مرحباً 👋 أنا مساعد نادي اوتك. كيف أقدر أساعدك؟';
+
+function addAiMessage(role, content, typing=false, imageUrl=''){
+  const box = $('aiMessages');
+  const row = document.createElement('div');
+  row.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  if (typing) b.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+  else {
+    if (content) { const t = document.createElement('div'); t.textContent = content; b.appendChild(t); }
+    if (imageUrl) { const im = document.createElement('img'); im.src = imageUrl; im.alt = 'الصورة المرسلة'; b.appendChild(im); }
+  }
+  row.appendChild(b); box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+  return row;
+}
+function clearAiChat(){ aiHistory = []; removeAiImage(); $('aiMessages').innerHTML = ''; addAiMessage('assistant', WELCOME); }
+addAiMessage('assistant', WELCOME);
+
+const bytesOf = d => Math.round((String(d || '').split(',')[1] || '').length * 0.75);
+const fmtBytes = b => b < 1024 ? b + ' B' : (b / 1024).toFixed(b < 10240 ? 1 : 0) + ' KB';
+
+function removeAiImage(){
+  aiPendingImage = null;
+  $('aiImageInput').value = '';
+  $('aiImagePreview').removeAttribute('src');
+  $('aiImagePreviewWrap').style.display = 'none';
+}
+async function compressAiImage(file){
+  const bmp = await createImageBitmap(file);
+  const ratio = Math.min(1, 720 / Math.max(bmp.width, bmp.height));
+  let w = Math.max(1, Math.round(bmp.width * ratio)), h = Math.max(1, Math.round(bmp.height * ratio));
+  const cv = document.createElement('canvas'), ctx = cv.getContext('2d', {alpha:false});
+  if (!ctx) throw new Error('تعذر ضغط الصورة');
+  const render = (W, H, q) => { cv.width = W; cv.height = H; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.drawImage(bmp, 0, 0, W, H); return cv.toDataURL('image/webp', q); };
+  let q = 0.58, url = render(w, h, q);
+  const target = 90 * 1024;
+  while (bytesOf(url) > target && q > 0.28) { q -= 0.08; url = render(w, h, q); }
+  while (bytesOf(url) > target && Math.max(w, h) > 420) { w = Math.round(w * 0.82); h = Math.round(h * 0.82); url = render(w, h, Math.max(0.3, q)); }
+  bmp.close?.();
+  return url;
+}
+async function handleAiImage(e){
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('اختر ملف صورة فقط.'); return removeAiImage(); }
+  try {
+    $('aiImageSize').textContent = 'جاري ضغط الصورة...';
+    $('aiImagePreviewWrap').style.display = 'flex';
+    aiPendingImage = await compressAiImage(file);
+    $('aiImagePreview').src = aiPendingImage;
+    $('aiImageSize').textContent = 'الحجم بعد الضغط: ' + fmtBytes(bytesOf(aiPendingImage));
+  } catch (err) { console.error(err); alert('تعذر تجهيز الصورة.'); removeAiImage(); }
+}
+
+function getStudentAiContext(){
+  const s = student || {}, st = window.studentAiStats || {};
+  return {name:s.name || '', code:s.code || '', group:s.group || '', points:Number(s.points || 0), commitment:Number(s.commitment || 0),
+    attendance:st.attendance || 0, absence:st.absence || 0, excusedAbsence:st.excusedAbsence || 0, late:st.late || 0,
+    recitation:st.recitation || 0, totalOperations:st.totalOperations || 0, absenceRate:st.absenceRate || 0, recentOperations:st.operations || []};
+}
+const extractAiReply = d => d?.choices?.[0]?.message?.content || d?.reply || d?.output_text || '';
+
+const CLUB_INFO = `معلومات ثابتة عن نادي أوتك الشبابي:
+نادي أوتك الشبابي هو برنامج اجتماعي وتنموي يستهدف الفتيان والشباب، ويتبع جمعية آمال بمنطقة عسير، وقد بدأ كامتداد لبرامج التنمية الأسرية بخميس مشيط.
+أبرز الأهداف والبرامج:
+- الوعي الأسري: تعزيز وعي الشباب بأدوارهم ومسؤولياتهم داخل الأسرة والمجتمع.
+- تنمية المهارات: أنشطة لتطوير المهارات القيادية والحياتية والقيم التربوية لدى الفتيان، خصوصًا في المرحلتين المتوسطة والثانوية.
+- الأنشطة الميدانية: دوريات رياضية وبرامج تعاونية ومسابقات تعزز روح العطاء والعمل التطوعي.
+الإنجازات: حقق برنامج أوتك الشبابي مراكز متقدمة على مستوى المملكة في مسابقات الفرق التطوعية والشبابية.
+تعليمات: استخدم هذه المعلومات عند السؤال عن النادي، ولا تخترع معلومات غير موجودة هنا.`;
+
+async function sendAiMessage(e){
+  e.preventDefault();
+  const input = $('aiInput'), btn = $('aiSendBtn');
+  const message = input.value.trim(), img = aiPendingImage;
+  if (!message && !img) return;
+
+  addAiMessage('user', message || 'حلّل هذه الصورة.', false, img || '');
+  aiHistory.push({role:'user', content: img
+    ? [{type:'text', text: message || 'حلّل هذه الصورة واشرح لي ما فيها بشكل مفيد.'}, {type:'image_url', image_url:{url:img}}]
+    : message});
+  input.value = ''; input.style.height = 'auto';
+  removeAiImage(); btn.disabled = true;
+  const typing = addAiMessage('assistant', '', true);
+
+  try {
+    if (!OPENROUTER_API_KEY) throw new Error('NO_API_KEY');
+    const systemText = `أنت المساعد الذكي الشخصي لطالب في نادي أوتك الشبابي.
+أسلوبك:
+- تحدث بالعربية بأسلوب طبيعي وودود وخفيف، ويمكنك المزاح الخفيف المناسب دون أن تجعل كل رد نكتة.
+- قدم نصائح عملية ومشجعة في الدراسة والتنظيم والانضباط والأنشطة.
+- إذا كان السؤال جاداً فكن هادئاً وواضحاً.
+- لا تدّعِ معرفة شيء غير موجود في البيانات، ولا تذكر كلمات المرور أو أي أسرار تقنية.
+- عند تحليل صورة، أجب عن سؤال المستخدم المتعلق بها.
+بيانات الطالب الحالية:
+${JSON.stringify(getStudentAiContext(), null, 2)}
+points نقاط الطالب، attendance الحضور، absence الغياب، excusedAbsence الغياب بعذر، late التأخر، recitation التسميع، absenceRate نسبة الغياب، recentOperations أحدث العمليات. استخدمها مباشرة عند السؤال عن حضوره أو نقاطه.`;
+
+    const res = await fetch(OPENROUTER_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer ' + OPENROUTER_API_KEY},
+      body: JSON.stringify({model:OPENROUTER_MODEL, max_completion_tokens:1200, reasoning:{effort:'low', exclude:true},
+        messages:[{role:'system', content:CLUB_INFO}, {role:'system', content:systemText}, ...aiHistory.slice(-10)]})
+    });
+    if (!res.ok) {
+      let m = 'خطأ من الخدمة: ' + res.status;
+      try { const d = await res.json(); m = d?.error?.message || d?.message || m; } catch (_) {}
+      throw new Error(m);
+    }
+    const reply = extractAiReply(await res.json()) || 'لم يصل رد صالح من الخدمة.';
+    typing.remove();
+    addAiMessage('assistant', reply);
+    aiHistory.push({role:'assistant', content:reply});
+  } catch (err) {
+    typing.remove();
+    addAiMessage('assistant', String(err.message).includes('NO_API_KEY')
+      ? 'المساعد غير مفعّل حالياً. يلزم ضبط مفتاح الخدمة من إعدادات الصفحة.'
+      : 'تعذر الاتصال بالمساعد حالياً.\n' + err.message);
+    console.error('AI error:', err);
+  } finally { btn.disabled = false; input.focus(); }
+}
+$('aiInput').addEventListener('input', e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 130) + 'px'; });
+</script>
+</body>
+</html>
